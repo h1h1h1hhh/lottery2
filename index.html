@@ -83,6 +83,26 @@ async function go(){
   await load();
   document.getElementById('roundTag').textContent='第 '+state.currentRound+'/3 轮';
 
+  // localStorage 防重复
+  if(localStorage.getItem('lot_done')){
+    document.getElementById('result').innerHTML='<p class="lose">每人只能抽一次哦</p>';
+    busy=false;return;
+  }
+
+  // 跨轮检查是否已中过（所有轮）
+  let alreadyWon=false,alreadyPrize='';
+  for(let r=1;r<=3;r++){
+    const w=state.rounds[r].winners;
+    Object.values(w).flat().forEach(wn=>{
+      if(wn===me){alreadyWon=true;
+        R.forEach((rr,i)=>{if(w[i].includes(me))alreadyPrize=rr.prize;});
+      }
+    });
+  }
+  if(alreadyWon){
+    showWin(me,alreadyPrize);busy=false;return;
+  }
+
   // 本轮是否已结束
   if(roundEnded()){
     if(state.currentRound>=3){
@@ -126,8 +146,10 @@ async function go(){
     if(tier<0) tier=3;
     roundWinners()[tier].push(me);
     await save();
+    localStorage.setItem('lot_done','1');
     showWin(me,R[tier].prize);
   }else{
+    localStorage.setItem('lot_done','1');
     showLose();
   }
   busy=false;
