@@ -29,7 +29,8 @@ h1{color:#ffd700;margin:20px 0}
 <div class="card" id="roundStatus"></div>
 
 <button class="btn btn-go" id="nextBtn" onclick="nextRound()">▶ 进入下一轮</button>
-<button class="btn-reset" onclick="resetAll()">🔄 重置全部</button>
+<button class="btn-reset" onclick="resetAll()">🔄 重置全部数据</button>
+<button class="btn-reset" onclick="clearLocal()">🔓 清除本机锁定</button>
 <div class="info" id="msg"></div>
 
 <script>
@@ -81,6 +82,8 @@ function render(){
     document.getElementById('nextBtn').disabled=false;
   }
 }
+
+function clearLocal(){localStorage.clear();document.getElementById('msg').textContent='✅ 本机锁定已清除，可重新扫码抽奖';}
 
 async function nextRound(){
   if(state.currentRound>=3)return;
