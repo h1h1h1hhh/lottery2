@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>🔑 管理员</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'PingFang SC','Microsoft YaHei',sans-serif;background:#0a001f;min-height:100vh;display:flex;flex-direction:column;align-items:center;color:#fff;padding:20px}
+h1{color:#ffd700;margin:20px 0}
+.card{background:rgba(255,255,255,.05);border:1px solid rgba(255,215,0,.3);border-radius:15px;padding:20px;max-width:360px;width:100%;text-align:center;margin:10px 0}
+.btn{padding:14px 30px;border:none;border-radius:30px;font-size:1.1em;font-weight:bold;cursor:pointer;margin:8px}
+.btn-go{background:linear-gradient(135deg,#ffd700,#ff8c00);color:#1a0033}
+.btn-reset{background:transparent;border:1px solid #f66;color:#f66;font-size:.8em;padding:8px 20px}
+.info{color:#aaa;font-size:.9em;margin:10px 0}
+.round-big{font-size:3em;color:#ffd700;font-weight:bold}
+.w-tag{display:inline-block;background:#ffd700;color:#1a0033;padding:2px 8px;border-radius:10px;margin:2px;font-size:.8em}
+</style>
+</head>
+<body>
+<h1>🔑 三轮抽奖控制台</h1>
+
+<div class="card">
+  <p style="color:#aaa">当前轮次</p>
+  <div class="round-big" id="roundNum">1</div>
+  <p style="color:#aaa">/ 3</p>
+</div>
+
+<div class="card" id="roundStatus"></div>
+
+<button class="btn btn-go" id="nextBtn" onclick="nextRound()">▶ 进入下一轮</button>
+<button class="btn-reset" onclick="resetAll()">🔄 重置全部</button>
+<div class="info" id="msg"></div>
+
+<script>
+const RAW='https://api.github.com/repos/h1h1h1hhh/lottery/contents/state2.json';
+const TK='ghp_'+'K9nIgzCtyWhjjCUTQTLatVnUEgbEXO1Bidv5';
+const R=[
+  {name:'🏆 特等奖',prize:'燕京啤酒1箱+电饭煲1台',count:1},
+  {name:'🥇 一等奖',prize:'燕京啤酒1箱',count:2},
+  {name:'🥈 二等奖',prize:'燕京啤酒6瓶',count:3},
+  {name:'🥉 三等奖',prize:'燕京啤酒2瓶',count:6},
+];
+let state=null,sha='';
+
+async function load(){
+  try{
+    const r=await fetch(RAW,{headers:{Authorization:'token '+TK},cache:'no-cache'});
+    const d=await r.json();sha=d.sha;
+    state=JSON.parse(atob(d.content));
+    render();
+  }catch(e){document.getElementById('msg').textContent='加载失败'}
+}
+
+async function save(){
+  const c=btoa(unescape(encodeURIComponent(JSON.stringify(state))));
+  const r=await fetch(RAW,{method:'PUT',headers:{Authorization:'token '+TK,'Content-Type':'application/json'},body:JSON.stringify({message:'admin',content:c,sha})});
+  const d=await r.json();sha=d.content.sha;
+}
+
+function render(){
+  document.getElementById('roundNum').textContent=state.currentRound;
+  const w=state.rounds[state.currentRound].winners;
+  const won=Object.values(w).flat().length;
+  let html='<p style="color:#aaa">本轮已抽：'+won+'/12 人</p>';
+  R.forEach((r,i)=>{
+    const list=w[i]||[];
+    html+='<p style="margin:3px 0">'+r.name+'（'+list.length+'/'+r.count+'）';
+    list.forEach(n=>{html+=' <span class="w-tag">'+n+'</span>'});
+    html+='</p>';
+  });
+  document.getElementById('roundStatus').innerHTML=html;
+  if(state.currentRound>=3){
+    document.getElementById('nextBtn').textContent='已是最后一轮';
+    document.getElementById('nextBtn').disabled=true;
+  }else{
+    document.getElementById('nextBtn').textContent='▶ 进入第'+(state.currentRound+1)+'轮';
+    document.getElementById('nextBtn').disabled=false;
+  }
+}
+
+async function nextRound(){
+  if(state.currentRound>=3)return;
+  state.currentRound++;
+  await save();
+  document.getElementById('msg').textContent='✅ 已切换到第 '+state.currentRound+' 轮！';
+  render();
+}
+
+async function resetAll(){
+  if(!confirm('确定重置全部三轮数据？'))return;
+  state={currentRound:1,rounds:{}};
+  for(let i=1;i<=3;i++) state.rounds[i]={winners:{0:[],1:[],2:[],3:[]},locked:false};
+  await save();
+  document.getElementById('msg').textContent='✅ 已全部重置';
+  render();
+}
+
+load();
+</script>
+</body>
+</html>
