@@ -47,13 +47,13 @@ async function load(){
   try{
     const r=await fetch(RAW,{headers:{Authorization:'token '+TK},cache:'no-cache'});
     const d=await r.json();sha=d.sha;
-    state=JSON.parse(atob(d.content));
+    state=JSON.parse(decodeURIComponent(escape(atob(d.content))));
     render();
   }catch(e){document.getElementById('msg').textContent='加载失败'}
 }
 
 async function save(){
-  const c=btoa(unescape(encodeURIComponent(JSON.stringify(state))));
+  const json=JSON.stringify(state);const u=new TextEncoder().encode(json);const c=btoa(String.fromCharCode(...u));
   const r=await fetch(RAW,{method:'PUT',headers:{Authorization:'token '+TK,'Content-Type':'application/json'},body:JSON.stringify({message:'admin',content:c,sha})});
   const d=await r.json();sha=d.content.sha;
 }
