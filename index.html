@@ -10,23 +10,22 @@ body{font-family:'PingFang SC','Microsoft YaHei',sans-serif;background:linear-gr
 .card{background:rgba(255,255,255,.05);border:1px solid rgba(255,215,0,.2);border-radius:20px;padding:30px;max-width:360px;width:100%;text-align:center}
 h1{font-size:1.4em;color:#ffd700;margin-bottom:5px}
 .round-tag{display:inline-block;background:rgba(255,215,0,.2);color:#ffd700;padding:4px 16px;border-radius:15px;font-size:.85em;margin-bottom:15px}
-.wait-tag{background:rgba(255,165,0,.2);color:#ffa500;padding:10px 20px;border-radius:15px;font-size:.9em;margin:15px 0}
 input{width:100%;padding:12px 18px;border-radius:30px;border:2px solid rgba(255,215,0,.5);background:rgba(255,255,255,.08);color:#fff;font-size:1.1em;text-align:center;margin:12px 0;outline:none}
 input:focus{border-color:#ffd700}
 .btn{padding:14px 40px;border:none;border-radius:30px;font-size:1.1em;font-weight:bold;cursor:pointer;background:linear-gradient(135deg,#ffd700,#ff8c00);color:#1a0033;margin:12px 0}
 .btn:disabled{opacity:.4;pointer-events:none}
 .result{margin-top:15px;font-size:1.1em}
-.result .win{color:#ffd700;font-size:1.4em;font-weight:bold}
-.result .lose{color:#aaa}
-.result .prize{color:#ffd700;font-size:1em;margin-top:5px}
-.result .ended{color:#f66;font-size:1.2em;font-weight:bold}
-.result .wait{color:#ffa500;font-size:1em}
+.win{color:#ffd700;font-size:1.4em;font-weight:bold}
+.lose{color:#aaa}
+.prize{color:#ffd700;font-size:1em;margin-top:5px}
+.ended{color:#f66;font-size:1.2em;font-weight:bold}
+.wait{color:#ffa500;font-size:1em}
 </style>
 </head>
 <body>
 <div class="card" id="card">
   <h1>🎰 幸运抽奖</h1>
-  <div class="round-tag" id="roundTag">第 1/3 轮</div>
+  <div class="round-tag" id="roundTag">加载中...</div>
   <div id="content">
     <input id="nameInput" placeholder="请输入你的名字">
     <br><button class="btn" id="btn" onclick="go()">🎯 抽奖</button>
@@ -35,7 +34,7 @@ input:focus{border-color:#ffd700}
 </div>
 
 <script>
-const RAW='https://api.github.com/repos/h1h1h1hhh/lottery/contents/state2.json';
+const RAW='https://api.github.com/repos/h1h1h1hhh/lottery2/contents/state2.json';
 const TK='ghp_'+'K9nIgzCtyWhjjCUTQTLatVnUEgbEXO1Bidv5';
 const R=[
   {name:'🏆 特等奖',prize:'燕京啤酒1箱+京东家电电饭煲1台',count:1,rate:.02},
@@ -45,35 +44,54 @@ const R=[
 ];
 let state={currentRound:1,rounds:{}},sha='',me='',busy=false;
 
+function encode64(str){
+  const u=new TextEncoder().encode(str);
+  return btoa(String.fromCharCode(...u));
+}
+function decode64(b64){
+  try{
+    const bin=atob(b64);
+    const u=new Uint8Array([...bin].map(c=>c.charCodeAt(0)));
+    return new TextDecoder().decode(u);
+  }catch(e){return '';}
+}
+
 async function load(){
   try{
     const r=await fetch(RAW,{headers:{Authorization:'token '+TK},cache:'no-cache'});
     const d=await r.json();sha=d.sha;
-    state=JSON.parse(atob(d.content));
-    if(!state.rounds[1]) initRounds();
-  }catch(e){console.error(e);initRounds();}
+    state=JSON.parse(decode64(d.content));
+    if(!state.rounds||!state.rounds[1]) initState();
+    document.getElementById('roundTag').textContent='第 '+state.currentRound+'/3 轮';
+  }catch(e){console.error(e);initState();document.getElementById('roundTag').textContent='第 1/3 轮';}
 }
 
-function initRounds(){
+function initState(){
   state={currentRound:1,rounds:{}};
-  for(let i=1;i<=3;i++){
-    state.rounds[i]={winners:{0:[],1:[],2:[],3:[]},locked:false};
-  }
+  for(let i=1;i<=3;i++) state.rounds[i]={winners:{0:[],1:[],2:[],3:[]}};
 }
 
 async function save(){
-  const c=btoa(unescape(encodeURIComponent(JSON.stringify(state))));
-  const r=await fetch(RAW,{method:'PUT',headers:{Authorization:'token '+TK,'Content-Type':'application/json'},body:JSON.stringify({message:'r',content:c,sha})});
+  const json=JSON.stringify(state);
+  const body=JSON.stringify({message:'r',content:encode64(json),sha});
+  const r=await fetch(RAW,{method:'PUT',headers:{Authorization:'token '+TK,'Content-Type':'application/json'},body});
   const d=await r.json();sha=d.content.sha;
 }
 
-function roundWinners(){return state.rounds[state.currentRound].winners;}
-function allWonThisRound(){return Object.values(roundWinners()).flat();}
-function totalThisRound(){return 12;}
-function roundEnded(){return allWonThisRound().length>=totalThisRound();}
+function rw(){return state.rounds[state.currentRound].winners;}
+function rwon(){return Object.values(rw()).flat();}
+function rtotal(){return 12;}
+function rended(){return rwon().length>=rtotal();}
 
 async function go(){
   if(busy)return;
+
+  // 第一步：设备检查
+  if(localStorage.getItem('lot_done')){
+    document.getElementById('result').innerHTML='<p class="lose">每人只能抽一次哦</p>';
+    return;
+  }
+
   const n=document.getElementById('nameInput').value.trim();
   if(!n){document.getElementById('result').innerHTML='<p class="lose">请输入名字</p>';return}
   me=n;busy=true;
@@ -81,57 +99,36 @@ async function go(){
   document.getElementById('btn').textContent='抽奖中...';
 
   await load();
-  document.getElementById('roundTag').textContent='第 '+state.currentRound+'/3 轮';
 
-  // localStorage 防重复
-  if(localStorage.getItem('lot_done')){
-    document.getElementById('result').innerHTML='<p class="lose">每人只能抽一次哦</p>';
-    busy=false;return;
-  }
-
-  // 跨轮检查是否已中过（所有轮）
-  let alreadyWon=false,alreadyPrize='';
+  // 第二步：跨轮名字检查
   for(let r=1;r<=3;r++){
     const w=state.rounds[r].winners;
-    Object.values(w).flat().forEach(wn=>{
-      if(wn===me){alreadyWon=true;
-        R.forEach((rr,i)=>{if(w[i].includes(me))alreadyPrize=rr.prize;});
+    for(let i=0;i<R.length;i++){
+      if((w[i]||[]).includes(me)){
+        showWin(me,R[i].prize);busy=false;return;
       }
-    });
-  }
-  if(alreadyWon){
-    showWin(me,alreadyPrize);busy=false;return;
-  }
-
-  // 本轮是否已结束
-  if(roundEnded()){
-    if(state.currentRound>=3){
-      showEndAll();
-    }else{
-      showWaitNext();
     }
-    busy=false;return;
   }
 
-  // 本轮是否已中过
-  if(allWonThisRound().includes(me)){
-    let p='';R.forEach((r,i)=>{if(roundWinners()[i].includes(me))p=r.prize;});
-    showWin(me,p);busy=false;return;
-  }
-
-  // 转圈动画
-  await new Promise(r=>setTimeout(r,1500+Math.random()*1500));
-
-  await load(); // 再次拉取防止并发
-
-  if(roundEnded()){
+  // 第三步：本轮是否结束
+  if(rended()){
     if(state.currentRound>=3)showEndAll();
     else showWaitNext();
     busy=false;return;
   }
 
-  const won=allWonThisRound().length;
-  const remain=totalThisRound()-won;
+  // 转圈
+  await new Promise(r=>setTimeout(r,1500+Math.random()*1500));
+  await load();
+
+  if(rended()){
+    if(state.currentRound>=3)showEndAll();
+    else showWaitNext();
+    busy=false;return;
+  }
+
+  const won=rwon().length;
+  const remain=rtotal()-won;
   const estRemain=Math.max(50-won,remain);
   const winRate=Math.min(remain/estRemain,.6);
 
@@ -139,12 +136,12 @@ async function go(){
     const rnd=Math.random();
     let tier=-1,cum=0;
     for(let i=0;i<R.length;i++){
-      if(roundWinners()[i].length>=R[i].count)continue;
+      if(rw()[i].length>=R[i].count)continue;
       cum+=R[i].rate;
       if(rnd<cum){tier=i;break;}
     }
     if(tier<0) tier=3;
-    roundWinners()[tier].push(me);
+    rw()[tier].push(me);
     await save();
     localStorage.setItem('lot_done','1');
     showWin(me,R[tier].prize);
