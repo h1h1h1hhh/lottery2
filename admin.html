@@ -43,17 +43,20 @@ const R=[
 ];
 let state=null,sha='';
 
+function enc(s){const u=new TextEncoder().encode(s);return btoa(String.fromCharCode(...u));}
+function dec(b){const bin=atob(b);const u=new Uint8Array([...bin].map(c=>c.charCodeAt(0)));return new TextDecoder().decode(u);}
+
 async function load(){
   try{
     const r=await fetch(RAW,{headers:{Authorization:'token '+TK},cache:'no-cache'});
     const d=await r.json();sha=d.sha;
-    state=JSON.parse(decodeURIComponent(escape(atob(d.content))));
+    state=JSON.parse(dec(d.content));
     render();
   }catch(e){document.getElementById('msg').textContent='加载失败'}
 }
 
 async function save(){
-  const json=JSON.stringify(state);const u=new TextEncoder().encode(json);const c=btoa(String.fromCharCode(...u));
+  const c=enc(JSON.stringify(state));
   const r=await fetch(RAW,{method:'PUT',headers:{Authorization:'token '+TK,'Content-Type':'application/json'},body:JSON.stringify({message:'admin',content:c,sha})});
   const d=await r.json();sha=d.content.sha;
 }
