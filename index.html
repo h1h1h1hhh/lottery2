@@ -37,10 +37,10 @@ input:focus{border-color:#ffd700}
 const RAW='https://api.github.com/repos/h1h1h1hhh/lottery2/contents/state2.json';
 const TK='ghp_'+'K9nIgzCtyWhjjCUTQTLatVnUEgbEXO1Bidv5';
 const R=[
-  {name:'🏆 特等奖',prize:'燕京啤酒1箱+京东家电电饭煲1台',count:1,rate:.02},
-  {name:'🥇 一等奖',prize:'燕京啤酒1箱',count:2,rate:.10},
-  {name:'🥈 二等奖',prize:'燕京啤酒6瓶',count:3,rate:.20},
-  {name:'🥉 三等奖',prize:'燕京啤酒2瓶',count:6,rate:.68},
+  {name:'🏆 特等奖',prize:'燕京啤酒1箱+京东家电电饭煲1台',count:1,rate:.05},
+  {name:'🥇 一等奖',prize:'燕京啤酒1箱',count:1,rate:.15},
+  {name:'🥈 二等奖',prize:'燕京啤酒6瓶',count:1,rate:.25},
+  {name:'🥉 三等奖',prize:'燕京啤酒2瓶',count:1,rate:.55},
 ];
 let state={currentRound:1,rounds:{}},sha='',me='',busy=false;
 
@@ -80,7 +80,7 @@ async function save(){
 
 function rw(){return state.rounds[state.currentRound].winners;}
 function rwon(){return Object.values(rw()).flat();}
-function rtotal(){return 12;}
+function rtotal(){return 4;}
 function rended(){return rwon().length>=rtotal();}
 
 async function go(){
