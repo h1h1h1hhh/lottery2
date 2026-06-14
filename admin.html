@@ -37,9 +37,9 @@ const RAW='https://api.github.com/repos/h1h1h1hhh/lottery/contents/state2.json';
 const TK='ghp_'+'K9nIgzCtyWhjjCUTQTLatVnUEgbEXO1Bidv5';
 const R=[
   {name:'🏆 特等奖',prize:'燕京啤酒1箱+电饭煲1台',count:1},
-  {name:'🥇 一等奖',prize:'燕京啤酒1箱',count:2},
-  {name:'🥈 二等奖',prize:'燕京啤酒6瓶',count:3},
-  {name:'🥉 三等奖',prize:'燕京啤酒2瓶',count:6},
+  {name:'🥇 一等奖',prize:'燕京啤酒1箱',count:1},
+  {name:'🥈 二等奖',prize:'燕京啤酒6瓶',count:1},
+  {name:'🥉 三等奖',prize:'燕京啤酒2瓶',count:1},
 ];
 let state=null,sha='';
 
@@ -65,7 +65,7 @@ function render(){
   document.getElementById('roundNum').textContent=state.currentRound;
   const w=state.rounds[state.currentRound].winners;
   const won=Object.values(w).flat().length;
-  let html='<p style="color:#aaa">本轮已抽：'+won+'/12 人</p>';
+  let html='<p style="color:#aaa">本轮已抽：'+won+'/4 人</p>';
   R.forEach((r,i)=>{
     const list=w[i]||[];
     html+='<p style="margin:3px 0">'+r.name+'（'+list.length+'/'+r.count+'）';
