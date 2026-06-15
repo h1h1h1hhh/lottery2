@@ -28,14 +28,18 @@ input:focus{border-color:#ffd700}
 <div class="card">
   <h1>🎰 幸运抽奖</h1>
   <div class="round-tag" id="roundTag">加载中...</div>
-  <div class="rules">
-    <span>📋 每轮奖项（共3轮）：</span><br>
+  <div class="rules" id="rulesBox" style="cursor:pointer" onclick="toggleRules()">
+    📋 中奖规则 ▾
+  </div>
+  <div id="rulesDetail" style="display:none;background:rgba(0,0,0,.2);border-radius:12px;padding:12px;margin:8px 0;font-size:.72em;color:#aaa;text-align:left;line-height:1.6">
     🏆 特等奖×1：燕京啤酒1箱+京东电饭煲1台<br>
     🥇 一等奖×1：燕京啤酒1箱<br>
     🥈 二等奖×1：燕京啤酒6瓶<br>
     🥉 三等奖×1：燕京啤酒2瓶<br>
-    <span>🎯 中奖率：</span>特5% / 一15% / 二25% / 三55%<br>
-    <span>⚠️ 每人仅限一次，跨轮不重复中奖</span>
+    <hr style="border-color:#333;margin:8px 0">
+    📌 共3轮，每轮奖品同上<br>
+    ⚠️ 每人仅限抽奖一次，跨轮不重复中奖<br>
+    ⚠️ 如因系统原因导致同一奖品被多人抽中，以最先抽中的记录为准<br>
   </div>
   <div id="content">
     <input id="nameInput" placeholder="请输入你的名字">
@@ -103,6 +107,7 @@ async function go(){
   }else{localStorage.setItem('l2d','1');showLose();}
   busy=false;
 }
+function toggleRules(){var d=document.getElementById('rulesDetail');var b=document.getElementById('rulesBox');if(d.style.display==='none'){d.style.display='block';b.innerHTML='📋 中奖规则 ▴';}else{d.style.display='none';b.innerHTML='📋 中奖规则 ▾';}}
 function showWin(name,prize,tm){document.getElementById('content').innerHTML='';document.getElementById('result').innerHTML='<p style="font-size:3em">🎊</p><p class="win">恭喜 '+name+'！</p><p class="prize">'+prize+'</p>'+(tm?'<p class="time">⏰ '+new Date(tm).toLocaleString()+'</p>':'')+'<p style="color:#aaa;font-size:.8em;margin-top:10px">请到领奖处领取</p>';}
 function showLose(){document.getElementById('content').innerHTML='';document.getElementById('result').innerHTML='<p style="font-size:3em">😢</p><p class="lose">很遗憾，没有中奖</p>';}
 function showWait(){document.getElementById('content').innerHTML='';document.getElementById('result').innerHTML='<p style="font-size:3em">⏳</p><p class="wait">本轮已结束</p><p style="color:#aaa">请等待下一轮</p>';}
