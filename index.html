@@ -86,7 +86,7 @@ function render(){
     for(let rn=1;rn<=3;rn++){
       h+='<p class="t">第'+rn+'轮</p>';
       const w=S.rs[rn].w;
-      R.forEach((r,i)=>{if(w[i].length>0)w[i].forEach(x=>{h+='<span class="n">🏆 '+x.n+' - '+r.p+'</span><br>';});});
+      R.forEach((r,i)=>{if(w[i].length>0)w[i].forEach(x=>{h+='<span class="n">🏆 '+x.n+' - '+r.p+' ('+new Date(x.t).toLocaleString()+'.'+x.t.slice(20,23)+')</span><br>';});});
     }
     h+='</div>';document.getElementById('area').innerHTML=h;return;
   }
@@ -94,7 +94,7 @@ function render(){
   if(rwn().length>=rt()){
     let h='<p style="font-size:3em">⏳</p><p class="wait">第 '+S.cr+' 轮已结束</p><div class="wlist"><p class="t">本轮中奖名单：</p>';
     const w=S.rs[S.cr].w;
-    R.forEach((r,i)=>{if(w[i].length>0)w[i].forEach(x=>{h+='<span class="n">🏆 '+x.n+' - '+r.p+'</span><br>';});});
+    R.forEach((r,i)=>{if(w[i].length>0)w[i].forEach(x=>{h+='<span class="n">🏆 '+x.n+' - '+r.p+' ('+new Date(x.t).toLocaleString()+'.'+x.t.slice(20,23)+')</span><br>';});});
     h+='</div><p style="color:#aaa;font-size:.8em;margin-top:10px">请等待下一轮开始</p>';
     document.getElementById('area').innerHTML=h;return;
   }
