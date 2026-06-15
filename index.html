@@ -7,25 +7,36 @@
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 body{font-family:'PingFang SC','Microsoft YaHei',sans-serif;background:linear-gradient(135deg,#0a001f,#1a0033 50%,#0d0028);min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#fff;padding:20px}
-.card{background:rgba(255,255,255,.05);border:1px solid rgba(255,215,0,.2);border-radius:20px;padding:30px;max-width:360px;width:100%;text-align:center}
-h1{font-size:1.4em;color:#ffd700;margin-bottom:5px}
-.round-tag{display:inline-block;background:rgba(255,215,0,.2);color:#ffd700;padding:4px 16px;border-radius:15px;font-size:.85em;margin-bottom:15px}
-input{width:100%;padding:12px 18px;border-radius:30px;border:2px solid rgba(255,215,0,.5);background:rgba(255,255,255,.08);color:#fff;font-size:1.1em;text-align:center;margin:12px 0;outline:none}
+.card{background:rgba(255,255,255,.05);border:1px solid rgba(255,215,0,.2);border-radius:20px;padding:25px;max-width:380px;width:100%;text-align:center}
+h1{font-size:1.3em;color:#ffd700;margin-bottom:5px}
+.round-tag{display:inline-block;background:rgba(255,215,0,.2);color:#ffd700;padding:4px 16px;border-radius:15px;font-size:.85em;margin-bottom:10px}
+.rules{background:rgba(0,0,0,.2);border-radius:12px;padding:12px;margin:8px 0;font-size:.72em;color:#aaa;text-align:left;line-height:1.6}
+.rules span{color:#ffd700}
+input{width:100%;padding:12px;border-radius:25px;border:2px solid rgba(255,215,0,.5);background:rgba(255,255,255,.08);color:#fff;font-size:1em;text-align:center;margin:10px 0;outline:none}
 input:focus{border-color:#ffd700}
-.btn{padding:14px 40px;border:none;border-radius:30px;font-size:1.1em;font-weight:bold;cursor:pointer;background:linear-gradient(135deg,#ffd700,#ff8c00);color:#1a0033;margin:12px 0}
+.btn{padding:13px 35px;border:none;border-radius:25px;font-size:1em;font-weight:bold;cursor:pointer;background:linear-gradient(135deg,#ffd700,#ff8c00);color:#1a0033;margin:8px 0}
 .btn:disabled{opacity:.4;pointer-events:none}
-.result{margin-top:15px;font-size:1.1em}
-.win{color:#ffd700;font-size:1.4em;font-weight:bold}
+.win{color:#ffd700;font-size:1.3em;font-weight:bold}
 .lose{color:#aaa}
-.prize{color:#ffd700;font-size:1em;margin-top:5px}
-.ended{color:#f66;font-size:1.2em;font-weight:bold}
-.wait{color:#ffa500;font-size:1em}
+.prize{color:#ffd700;font-size:.95em;margin-top:5px}
+.time{color:#888;font-size:.75em;margin-top:5px}
+.ended{color:#f66;font-size:1.1em;font-weight:bold}
+.wait{color:#ffa500}
 </style>
 </head>
 <body>
-<div class="card" id="card">
+<div class="card">
   <h1>🎰 幸运抽奖</h1>
   <div class="round-tag" id="roundTag">加载中...</div>
+  <div class="rules">
+    <span>📋 每轮奖项（共3轮）：</span><br>
+    🏆 特等奖×1：燕京啤酒1箱+京东电饭煲1台<br>
+    🥇 一等奖×1：燕京啤酒1箱<br>
+    🥈 二等奖×1：燕京啤酒6瓶<br>
+    🥉 三等奖×1：燕京啤酒2瓶<br>
+    <span>🎯 中奖率：</span>特5% / 一15% / 二25% / 三55%<br>
+    <span>⚠️ 每人仅限一次，跨轮不重复中奖</span>
+  </div>
   <div id="content">
     <input id="nameInput" placeholder="请输入你的名字">
     <br><button class="btn" id="btn" onclick="go()">🎯 抽奖</button>
@@ -37,141 +48,65 @@ input:focus{border-color:#ffd700}
 const RAW='https://api.github.com/repos/h1h1h1hhh/lottery2/contents/state2.json';
 const TK='ghp_'+'K9nIgzCtyWhjjCUTQTLatVnUEgbEXO1Bidv5';
 const R=[
-  {name:'🏆 特等奖',prize:'燕京啤酒1箱+京东家电电饭煲1台',count:1,rate:.05},
+  {name:'🏆 特等奖',prize:'燕京啤酒1箱+京东电饭煲1台',count:1,rate:.05},
   {name:'🥇 一等奖',prize:'燕京啤酒1箱',count:1,rate:.15},
   {name:'🥈 二等奖',prize:'燕京啤酒6瓶',count:1,rate:.25},
   {name:'🥉 三等奖',prize:'燕京啤酒2瓶',count:1,rate:.55},
 ];
-let state={currentRound:1,rounds:{}},sha='',me='',busy=false;
-
-function encode64(str){
-  const u=new TextEncoder().encode(str);
-  return btoa(String.fromCharCode(...u));
-}
-function decode64(b64){
-  try{
-    const bin=atob(b64);
-    const u=new Uint8Array([...bin].map(c=>c.charCodeAt(0)));
-    return new TextDecoder().decode(u);
-  }catch(e){return '';}
-}
-
+let state={cr:1,rs:{}},sha='',me='',busy=false;
+function enc(s){const u=new TextEncoder().encode(s);return btoa(String.fromCharCode(...u));}
+function dec(b){const a=atob(b);const u=new Uint8Array([...a].map(c=>c.charCodeAt(0)));return new TextDecoder().decode(u);}
+function rw(){return state.rs[state.cr].w;}
+function rwn(){return Object.values(rw()).flat().map(x=>x.n||x);}
+function rt(){return 4;}
 async function load(){
   try{
     const r=await fetch(RAW,{headers:{Authorization:'token '+TK},cache:'no-cache'});
-    const d=await r.json();sha=d.sha;
-    state=JSON.parse(decode64(d.content));
-    if(!state.rounds||!state.rounds[1]) initState();
-    document.getElementById('roundTag').textContent='第 '+state.currentRound+'/3 轮';
-  }catch(e){console.error(e);initState();document.getElementById('roundTag').textContent='第 1/3 轮';}
+    const d=await r.json();sha=d.sha;state=JSON.parse(dec(d.content));
+    if(!state.rs||!state.rs[1]){state={cr:1,rs:{}};for(let i=1;i<=3;i++)state.rs[i]={w:{0:[],1:[],2:[],3:[]}};}
+    document.getElementById('roundTag').textContent='第 '+state.cr+'/3 轮';
+  }catch(e){console.error(e);}
 }
-
-function initState(){
-  state={currentRound:1,rounds:{}};
-  for(let i=1;i<=3;i++) state.rounds[i]={winners:{0:[],1:[],2:[],3:[]}};
-}
-
 async function save(){
-  const json=JSON.stringify(state);
-  const body=JSON.stringify({message:'r',content:encode64(json),sha});
-  const r=await fetch(RAW,{method:'PUT',headers:{Authorization:'token '+TK,'Content-Type':'application/json'},body});
+  const b=JSON.stringify({message:'r',content:enc(JSON.stringify(state)),sha});
+  const r=await fetch(RAW,{method:'PUT',headers:{Authorization:'token '+TK,'Content-Type':'application/json'},body:b});
   const d=await r.json();sha=d.content.sha;
 }
-
-function rw(){return state.rounds[state.currentRound].winners;}
-function rwon(){return Object.values(rw()).flat();}
-function rtotal(){return 4;}
-function rended(){return rwon().length>=rtotal();}
-
+function allWon(){let t=0;for(let i=1;i<=3;i++){const w=state.rs[i].w;Object.values(w).forEach(a=>t+=a.length);}return t;}
 async function go(){
   if(busy)return;
-
-  // 第一步：设备检查
-  if(localStorage.getItem('lot_done')){
-    document.getElementById('result').innerHTML='<p class="lose">每人只能抽一次哦</p>';
-    return;
-  }
-
+  if(localStorage.getItem('l2d')){document.getElementById('result').innerHTML='<p class="lose">每人只能抽一次哦</p>';return}
   const n=document.getElementById('nameInput').value.trim();
   if(!n){document.getElementById('result').innerHTML='<p class="lose">请输入名字</p>';return}
-  me=n;busy=true;
-  document.getElementById('btn').disabled=true;
-  document.getElementById('btn').textContent='抽奖中...';
-
+  me=n;busy=true;document.getElementById('btn').disabled=true;document.getElementById('btn').textContent='抽奖中...';
   await load();
-
-  // 第二步：跨轮名字检查
-  for(let r=1;r<=3;r++){
-    const w=state.rounds[r].winners;
-    for(let i=0;i<R.length;i++){
-      if((w[i]||[]).includes(me)){
-        showWin(me,R[i].prize);busy=false;return;
-      }
-    }
+  // 跨轮检查
+  for(let r=1;r<=3;r++){const w=state.rs[r].w;for(let i=0;i<R.length;i++){if((w[i]||[]).some(x=>(x.n||x)===me)){showWin(me,R[i].prize,'');busy=false;return;}}}
+  if(rwn().length>=rt()){
+    if(state.cr>=3){showEnd();busy=false;return;}
+    showWait();busy=false;return;
   }
-
-  // 第三步：本轮是否结束
-  if(rended()){
-    if(state.currentRound>=3)showEndAll();
-    else showWaitNext();
-    busy=false;return;
-  }
-
-  // 转圈
   await new Promise(r=>setTimeout(r,1500+Math.random()*1500));
   await load();
-
-  if(rended()){
-    if(state.currentRound>=3)showEndAll();
-    else showWaitNext();
-    busy=false;return;
+  if(rwn().length>=rt()){
+    if(state.cr>=3){showEnd();busy=false;return;}
+    showWait();busy=false;return;
   }
-
-  const won=rwon().length;
-  const remain=rtotal()-won;
-  const estRemain=Math.max(50-won,remain);
-  const winRate=Math.min(remain/estRemain,.6);
-
-  if(Math.random()<winRate){
-    const rnd=Math.random();
-    let tier=-1,cum=0;
-    for(let i=0;i<R.length;i++){
-      if(rw()[i].length>=R[i].count)continue;
-      cum+=R[i].rate;
-      if(rnd<cum){tier=i;break;}
-    }
-    if(tier<0) tier=3;
-    rw()[tier].push(me);
-    await save();
-    localStorage.setItem('lot_done','1');
-    showWin(me,R[tier].prize);
-  }else{
-    localStorage.setItem('lot_done','1');
-    showLose();
-  }
+  const wn=rwn().length;const rm=rt()-wn;
+  const wr=Math.min(rm/Math.max(50-wn-allWon(),rm),.6);
+  if(Math.random()<wr){
+    let rnd=Math.random(),tier=-1,cum=0;
+    for(let i=0;i<R.length;i++){if(rw()[i].length>=R[i].count)continue;cum+=R[i].rate;if(rnd<cum){tier=i;break;}}
+    if(tier<0)tier=3;
+    const now=new Date().toISOString();(rw()[tier]=rw()[tier]||[]).push({n:me,t:now});
+    await save();localStorage.setItem('l2d','1');showWin(me,R[tier].prize,now);
+  }else{localStorage.setItem('l2d','1');showLose();}
   busy=false;
 }
-
-function showWin(name,prize){
-  document.getElementById('content').innerHTML='';
-  document.getElementById('result').innerHTML='<p style="font-size:3em">🎊</p><p class="win">恭喜 '+name+'！</p><p class="prize">'+prize+'</p><p style="color:#aaa;font-size:.85em;margin-top:15px">请到领奖处领取奖品</p>';
-}
-
-function showLose(){
-  document.getElementById('content').innerHTML='';
-  document.getElementById('result').innerHTML='<p style="font-size:3em">😢</p><p class="lose">很遗憾，没有中奖</p>';
-}
-
-function showWaitNext(){
-  document.getElementById('content').innerHTML='';
-  document.getElementById('result').innerHTML='<p style="font-size:3em">⏳</p><p class="wait">本轮抽奖已结束</p><p style="color:#aaa;margin-top:10px">请等待下一轮开始</p>';
-}
-
-function showEndAll(){
-  document.getElementById('content').innerHTML='';
-  document.getElementById('result').innerHTML='<p style="font-size:3em">🎊</p><p class="ended">全部抽奖已结束</p><p style="color:#aaa;margin-top:10px">感谢参与！</p>';
-}
-
+function showWin(name,prize,tm){document.getElementById('content').innerHTML='';document.getElementById('result').innerHTML='<p style="font-size:3em">🎊</p><p class="win">恭喜 '+name+'！</p><p class="prize">'+prize+'</p>'+(tm?'<p class="time">⏰ '+new Date(tm).toLocaleString()+'</p>':'')+'<p style="color:#aaa;font-size:.8em;margin-top:10px">请到领奖处领取</p>';}
+function showLose(){document.getElementById('content').innerHTML='';document.getElementById('result').innerHTML='<p style="font-size:3em">😢</p><p class="lose">很遗憾，没有中奖</p>';}
+function showWait(){document.getElementById('content').innerHTML='';document.getElementById('result').innerHTML='<p style="font-size:3em">⏳</p><p class="wait">本轮已结束</p><p style="color:#aaa">请等待下一轮</p>';}
+function showEnd(){document.getElementById('content').innerHTML='';document.getElementById('result').innerHTML='<p style="font-size:3em">🎊</p><p class="ended">全部抽奖已结束</p>';}
 load();
 </script>
 </body>
