@@ -64,7 +64,7 @@ async function loadData(){
     document.getElementById('data').innerHTML=h;
   }catch(e){document.getElementById('msg').textContent='加载失败'}
 }
-async function save(st){const b=JSON.stringify({message:'a',content:enc(JSON.stringify(st)),sha});const r=await fetch(RAW,{method:'PUT',headers:{Authorization:'token '+TK,'Content-Type':'application/json'},body:b});const d=await r.json();sha=d.content.sha;}
+async function save(st){for(let i=0;i<8;i++){try{const b=JSON.stringify({message:'a',content:enc(JSON.stringify(st)),sha});const r=await fetch(RAW,{method:'PUT',headers:{Authorization:'token '+TK,'Content-Type':'application/json'},body:b});if(!r.ok){if(r.status===409){await loadData();await new Promise(x=>setTimeout(x,200));continue;}throw new Error('fail');}const d=await r.json();sha=d.content.sha;return true;}catch(e){await loadData();await new Promise(x=>setTimeout(x,200));}}return false;}
 async function nextRound(){if(state.cr>=3)return;state.cr++;await save(state);await loadData();q('已切换到第'+state.cr+'轮');}
 async function resetAll(){if(!confirm('确定重置全部？'))return;state={cr:1,rs:{}};for(let i=1;i<=3;i++)state.rs[i]={w:{0:[],1:[],2:[],3:[]}};await save(state);await loadData();q('已重置');}
 async function unlock(){const n=document.getElementById('uname').value.trim();if(!n)return;await loadData();let f=false;for(let rn=1;rn<=3;rn++){const w=state.rs[rn].w;for(let i=0;i<4;i++){w[i]=(w[i]||[]).filter(x=>{if((x.n||x)===n){f=true;return false}return true;});}}if(f){await save(state);await loadData();q('已解除：'+n);}else{q('未找到：'+n);}}
