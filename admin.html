@@ -56,7 +56,7 @@ async function loadData(){
       const w=state.rs[rn].w;let rt=0;
       R.forEach((l,i)=>{const a=w[i]||[];rt+=a.length;t+=a.length;
         h+='<p class="c">第'+rn+'轮 '+l+'（'+a.length+'人）</p>';
-        a.forEach(x=>{h+='<span class="w" onclick="rm('+rn+','+i+',\''+(x.n||x)+'\')">'+x.n+'<br><span style="font-size:.7em;color:#888">'+new Date(x.t).toLocaleString()+'</span></span>';});
+        a.forEach(x=>{h+='<span class="w" onclick="rm('+rn+','+i+',\''+(x.n||x)+'\')">'+x.n+'<br><span style="font-size:.7em;color:#888">'+new Date(x.t).toLocaleString()+'.'+x.t.slice(20,23)+'</span></span>';});
       });
       h+='<p class="c">第'+rn+'轮小计：'+rt+'/4</p><hr style="border-color:#333;margin:5px 0">';
     }
